@@ -1,0 +1,35 @@
+services:
+  # 外部公開するアプリ。ホストの 8080 からのみアクセスできる。
+  # 外向き HTTP(S) は smokescreen プロキシ経由に強制する。
+  vuln-app:
+    build: ./vuln-app
+    ports:
+      - "8080:5000"
+    environment:
+      # requests はこの環境変数を自動で尊重する。
+      HTTP_PROXY: "http://smokescreen:4750"
+      HTTPS_PROXY: "http://smokescreen:4750"
+      # localhost 等は従来どおり（プロキシ無しの直アクセス禁止を見せたい場合は空に）
+      NO_PROXY: ""
+    networks:
+      - internal
+    depends_on:
+      - smokescreen
+
+  # 内部サービス。ports を公開しないのでホストからは直接触れない。
+  internal-service:
+    image: nginx:1.27-alpine
+    volumes:
+      - ./internal-service/index.html:/usr/share/nginx/html/index.html:ro
+    networks:
+      - internal
+
+  # SSRF 対策フォワードプロキシ。プライベート/ループバック/リンクローカル宛を拒否する。
+  smokescreen:
+    build: ./smokescreen
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
