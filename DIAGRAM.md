@@ -49,4 +49,3 @@ sequenceDiagram
 - 対策後は App→外部の間に smokescreen が挟まり、DNS 解決後の IP で判定する。
   プライベート/ループバック/リンクローカル帯は Deny、グローバルユニキャストは Allow。
 - アプリのコードは変更せず、環境変数 HTTP(S)_PROXY で requests を経由させているだけ。
-```
